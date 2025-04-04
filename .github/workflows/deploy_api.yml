@@ -32,7 +32,7 @@ jobs:
         run: sequelize db:migrate
 
       - name: Construir imagen Docker
-        run: docker build -t willyrexx/mysql-restapi:${{ github.sha }} .
+        run: docker build -t willyrexx/mysql-api:${{ github.sha }} .
 
       - name: Ejecutar contenedor Docker con la URL de la base de datos
         run: |
