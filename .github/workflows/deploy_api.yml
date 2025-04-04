@@ -21,9 +21,9 @@ jobs:
       - run: npm install -g sequelize-cli@6.2.0 
 
       - run: sequelize db:migrate
-      - run: docker build -t WilliamSosa895/mysql-restapi:${{github.sha}} .
+      - run: docker build -t williamsosa895/mysql-restapi:${{github.sha}} .
       - run: docker images
-      - run: docker run --name api -p 8080:8080 -d WilliamSosa895/mysql-restapi:${{github.sha}} 
+      - run: docker run --name api -p 8080:8080 -d williamsosa895/mysql-restapi:${{github.sha}} 
       - run: docker ps
       - run: docker exec api ls -la
 
