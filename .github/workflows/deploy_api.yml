@@ -7,51 +7,33 @@ on:
 jobs:
   deploy-api:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+      - run: echo 'hello world ..'
+      - run: ls -la
+      - run: touch .env
+      - run: echo 'DEV_DATABASE_URL=${{secrets.MYSQL_CONN}}'  >> .env
+      - run: cat .env
+      - run: npm install
+      - run: npm install -g sequelize-cli@6.2.0 
 
-      - name: Ver entorno
-        run: echo 'Iniciando deploy...'
+      - run: sequelize db:migrate
+      - run: docker build -t WilliamSosa895/mysql-restapi:${{github.sha}} .
+      - run: docker images
+      - run: docker run --name api -p 8080:8080 -d WilliamSosa895/mysql-restapi:${{github.sha}} 
+      - run: docker ps
+      - run: docker exec api ls -la
 
-      - name: Instalar dependencias
-        run: |
-          npm install
-          npm install -g sequelize-cli@6.2.0
-
-      - name: Crear archivo .env con la URL de la base de datos
-        run: |
-          touch .env
-          echo "DEV_DATABASE_URL=mysql://avnadmin:AVNS_O56i6ovAmDkMFB3H74w@mysql-19c2a73c-william.g.aivencloud.com:20169/defaultdb?ssl-mode=REQUIRED" >> .env
-          cat .env
-
-      - name: Ejecutar migraciones
-        run: sequelize db:migrate
-
-      - name: Construir imagen Docker
-        run: docker build -t willyrexx/mysql-api:${{ github.sha }} .
-
-      - name: Ejecutar contenedor Docker con la URL de la base de datos
-        run: |
-          docker run -d \
-            --name api \
-            -p 8080:8080 \
-            -e DEV_DATABASE_URL="mysql://avnadmin:AVNS_O56i6ovAmDkMFB3H74w@mysql-19c2a73c-william.g.aivencloud.com:20169/defaultdb?ssl-mode=REQUIRED" \
-            willyrexx/mysql-restapi:${{ github.sha }}
-
-      - name: Verificar ejecución del contenedor
-        run: |
-          docker ps
-          curl 0.0.0.0:8080/api
-
-      - name: Iniciar sesión en Docker Hub
+      - run: curl 0.0.0.0:8080/api
+   
+      - name: docker login
         env:
-          DOCKER_USER: willyrexx
-          DOCKER_PASSWORD: williamo2703
-        run: docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
-
-      - name: Subir imagen a Docker Hub
-        run: docker push willyrexx/mysql-restapi:${{ github.sha }}
+          DOCKER_USER: ${{secrets.DOCKER_USER}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run:  docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+        
+      - name: docker push
+        run:  docker push ${{ secrets.DOCKER_USER}}/mysql-restapi:${{github.sha}}      
